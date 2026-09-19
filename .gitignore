@@ -51,6 +51,7 @@ QTCreator-PandA-GitHub.creator.user
 .env
 build/
 build_release/
+build-app/
 obj/
 panda_dist/
 install/
