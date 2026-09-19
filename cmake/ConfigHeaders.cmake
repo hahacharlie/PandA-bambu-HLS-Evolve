@@ -701,6 +701,15 @@ static FrontendPluginRegistry::Add<ProbeAction> X1(\"print-fns\", \"probe plugin
       _panda_write_clang_matrix(${ver} "${_found}" "${_clangpp_exe}" "${_clangcpp_exe}" "${_llvmlink_exe}" "${_llvmopt_exe}" "${_plugin_dir}" "${_version_str}")
    endfunction()
 
+   # Cached probe results are only valid for the compiler set they were taken against.
+   # Without this, adding a version to PANDA_DIST_COMPILERS bundles the compiler but
+   # leaves HAVE_I386_CLANG<ver>_COMPILER off, so bambu still rejects it as unknown.
+   set(_clang_probe_key "${PANDA_DIST_COMPILERS}|${PANDA_CFG_MIN_CLANG_VERSION}|${PANDA_CFG_MAX_CLANG_VERSION}")
+   if(NOT "${_clang_probe_key}" STREQUAL "${PANDA_CLANG_PROBE_KEY}")
+      set(PANDA_CFG_FORCE_CLANG_PROBE ON)
+      set(PANDA_CLANG_PROBE_KEY "${_clang_probe_key}" CACHE INTERNAL "")
+   endif()
+
    # Probe requested clang versions
    foreach(_pair IN ITEMS
          "4;clang-4.0"
