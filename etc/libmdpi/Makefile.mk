@@ -92,6 +92,17 @@ DRIVER_LDFLAGS += $(shell if basename $(CC) | grep -v '++' | grep -q 'clang'; th
 DRIVER_LDFLAGS += $(shell if basename $(CC) | grep -v '++' | grep -qv 'clang'; then echo -lstdc++; fi)
 DRIVER_LDFLAGS += -lpthread -lm -ldl
 
+# A -m32 testbench is compiled against the distribution's own lib32 sysroot, but the
+# generated backend scripts strip $APPDIR out of LD_LIBRARY_PATH before launching it
+# (so host g++/verilator don't pick up bundled libs). Record the path in the ELF so the
+# testbench still resolves the libstdc++ it was built against.
+panda_lib32 := $(abspath $(libmdpi_root)/../../../lib32)
+ifneq ($(filter -m32,$(DRIVER_LDFLAGS)),)
+ifneq ($(wildcard $(panda_lib32)/libstdc++.so.6),)
+	DRIVER_LDFLAGS += -Wl,-rpath,$(panda_lib32)
+endif
+endif
+
 LIB_LDFLAGS := 
 ifeq ($(BEH_CC),xsc)
 	LIB_CFLAGS := $(addprefix -gcc_compile_options=, $(LIB_CFLAGS))
